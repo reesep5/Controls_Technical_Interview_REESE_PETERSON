@@ -15,6 +15,7 @@
 //****************************************************************************
 #include "elevator_problem.h"
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -40,13 +41,214 @@ static void delay(int16_t ms);
 // Functions You (the Interviewee) Should Edit:
 //****************************************************************************
 
+/**
+ * Check if the location is empty of people
+ * @param occupants pointer to the array of occupants
+ * @param maxOccupants the max occupants for that location
+ */
+bool isLocationEmpty(int8_t *occupants, int8_t maxOccupants)
+{
+	bool isEmpty = true;
+	for(int i = 0; i < maxOccupants; i++)
+	{
+		isEmpty &= (occupants[i] < 0);
+	}
+	return isEmpty;
+}
+
+/**
+ * Check if the floor is empty
+ * @param floor The floor struct to check
+ */
+bool isFloorEmpty(struct floor_s floor)
+{
+	return isLocationEmpty(floor.departures, 2);
+}
+
+/**
+ * Check if the elevator is empty of passengers
+ * 
+ * @param elevator the elevator struct
+ */
+bool isElevatorEmpty(struct elevator_s elevator)
+{
+	return isLocationEmpty(elevator.passengers, ELEVATOR_MAX_CAPACITY);
+}
+
+/**
+ * Check if the elevator is full of passengers
+ * 
+ * @param elevator the elevator struct
+ */
+bool isElevatorFull(struct elevator_s elevator)
+{
+	bool isEmpty = true;
+	for(int i = 0; i < ELEVATOR_MAX_CAPACITY; i++)
+	{
+		isEmpty &= (elevator.passengers[i] >= 0);
+	}
+	return isEmpty;
+}
+
+/**
+ * Find the nearest occupied floor to get passengers from
+ * @param building The building struct
+ * @param currentFloorNum Floor number to measure the distance from
+ */
+int8_t findNearestOccupiedFloor(struct building_s building, int8_t currentFloorNum)
+{
+	int8_t closestFloor = -1;
+	int8_t up = -1;
+	int8_t down = -1;
+
+	// If the current floor isn't empty then just return it
+	if (!isFloorEmpty(building.floors[currentFloorNum]))
+		return currentFloorNum;
+
+	// If the current floor isn't the top floor, check the above floors
+	if(currentFloorNum < (BUILDING_HEIGHT - 1))
+	{
+		for(int i = currentFloorNum + 1; i < BUILDING_HEIGHT; i++)
+		{
+			if (!isFloorEmpty(building.floors[i]))
+			{
+				up = i;
+				break;
+			}
+		}
+	}
+
+	// If the current floor isn't the bottom floor, check the below floors
+	if(currentFloorNum > 0)
+	{
+		for(int i = currentFloorNum - 1; i >=0; i--)
+		{
+			if (!isFloorEmpty(building.floors[i]))
+			{
+				down = i;
+				break;
+			}
+		}
+	}
+
+	// If there are occupied floors both above and below, choose the closest one. Otherwise, return whichever has an occupied floor
+	if((up != -1) && (down != -1))
+		return (abs(up - currentFloorNum) > abs(down - currentFloorNum)) ? up : down;
+	if(up != -1)
+		return up;
+	return down;
+}
+
+/**
+ * Finds the floor with the most travel distance to collect another passenger with the same departing floor
+ * 
+ * @param building the building struct
+ */
+int8_t findFurthestFloor(struct building_s building)
+{
+	int8_t maxDistance = 0;
+	int8_t furthestFloor = -1;
+
+	for (int j = 0; j < ELEVATOR_MAX_CAPACITY; j++)
+	{
+		int8_t desiredFloor = building.elevator.passengers[j];
+		if(desiredFloor != -1)
+		{
+			for (int i = 0; i < BUILDING_HEIGHT; i++)
+			{
+				if(!isFloorEmpty(building.floors[i]) && i != desiredFloor)
+				{
+					int8_t distance = abs(i - desiredFloor);
+					int8_t *departures = building.floors->departures;
+					if ((departures[0] == desiredFloor) && (distance > maxDistance))
+					{
+						maxDistance = distance;
+						furthestFloor = i;
+					}
+					else if((departures[0] == -1) && (departures[1] == desiredFloor) && (distance > maxDistance))
+					{
+						maxDistance = distance;
+						furthestFloor = i;
+					}
+				}
+				else if(furthestFloor == -1)
+					furthestFloor = desiredFloor;
+			}
+		}
+	}
+	return furthestFloor;
+}
+
+/**
+ * Choose the the best floor to move a full elevator to
+ * 
+ * @param  elevator The elevator struct
+ */
+int8_t chooseFullElevatorFloor(struct elevator_s elevator)
+{
+	int maxDistance = 0;
+	int8_t desiredFloor = 0;
+	for (int i = 0; i < ELEVATOR_MAX_CAPACITY; i++)
+	{
+		int8_t passengerFloor = elevator.passengers[i];
+		for (int j = i; j < ELEVATOR_MAX_CAPACITY; j++)
+		{
+			if (passengerFloor == elevator.passengers[j])
+				return elevator.passengers[i];
+		}
+		int8_t distance = abs(elevator.currentFloor - passengerFloor);
+		if (distance > maxDistance)
+		{
+			maxDistance = distance;
+			desiredFloor = passengerFloor; 
+		}
+	}
+	return desiredFloor;
+}
+
 //Returns the floor the elevator should STOP at next
 //To stop at a floor means to open the doors and let passengers on and off. It 
 //is possible to pass through a floor without stopping there.
 //Note: The output should be a number between 0 and (BUILDING_HEIGHT-1), inclusive
 static int8_t setNextElevatorStop(struct building_s building)
 {
-	return 0;
+	printf("%d %d\n", building.elevator.currentFloor, building.elevator.nextStop);
+	printf("%d\n", isElevatorEmpty(building.elevator));
+	if (building.elevator.currentFloor != building.elevator.nextStop)
+		return building.elevator.nextStop;
+	else if(isElevatorEmpty(building.elevator))
+		return findNearestOccupiedFloor(building, building.elevator.currentFloor);
+	else if (isElevatorFull(building.elevator))
+	{
+		return chooseFullElevatorFloor(building.elevator);
+	}
+	else
+	{
+		return findFurthestFloor(building);
+	}
+	// else
+	// 	return calculateBestFloor(building);
+
+	int8_t maxDistance = 10;
+	int8_t nextFloor = 0;
+	for(int i = 0; i < ELEVATOR_MAX_CAPACITY; i++)
+	{
+		int8_t passengerStop = building.elevator.passengers[i];
+		if(passengerStop >= 0)
+		{
+			
+			int8_t distance = abs(passengerStop - building.elevator.currentFloor);
+			if (distance > maxDistance)
+			{
+				maxDistance = distance;
+				nextFloor = passengerStop;
+			}
+		}
+	}
+	if (maxDistance == -1)
+		return building.elevator.currentFloor;
+	else
+		return nextFloor;
 }
 
 
@@ -70,7 +272,7 @@ void main(void)
 	initBuilding();
 
 	//Draw the initial state of the building, with elevator doors closed
-	system("clear");
+	// system("clear");
 	drawBuilding(myBuilding,1);
 	fflush(stdout);
 	delay(1000);
@@ -85,7 +287,7 @@ void main(void)
 		moveElevator(&myBuilding.elevator);
 
 		//Draw the building, with elevator doors closed
-		system("clear");
+		// system("clear");
 		drawBuilding(myBuilding,1);
 		fflush(stdout);
 		delay(1000);
@@ -94,7 +296,7 @@ void main(void)
 		if(myBuilding.elevator.currentFloor == myBuilding.elevator.nextStop)
 		{
 			//Redraw the building, with elevator doors open
-			system("clear");
+			// system("clear");
 			drawBuilding(myBuilding,0);
 			fflush(stdout);
 			delay(1000);
@@ -104,14 +306,14 @@ void main(void)
 			stopElevator(&myBuilding);
 
 			//Redraw the building, with elevator doors open, showing the change
-			system("clear");
+			// system("clear");
 			drawBuilding(myBuilding,0);
 			fflush(stdout);
 			delay(1000);
 			i++;
 
 			//Redraw the building, with elevator doors closed
-			system("clear");
+			// system("clear");
 			drawBuilding(myBuilding,1);
 			fflush(stdout);
 			delay(1000);
