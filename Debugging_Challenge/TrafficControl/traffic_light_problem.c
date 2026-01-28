@@ -66,7 +66,8 @@ void main(void)
 		advanceLane(myIntersection.verticalTrafficColor, &myIntersection.southboundCars);
 
 		//Draw the intersection
-		system("clear");
+		// system("clear");
+		printf("\n");
 		drawIntersection(myIntersection);
 		fflush(stdout);
 		delay(1000);
@@ -75,6 +76,8 @@ void main(void)
 		if(checkForCrashes() == 1)
 		{
 			printf("FAIL: Car crash!\n");
+			drawIntersection(myIntersection);
+			fflush(stdout);
 			return;
 		}
 
@@ -138,6 +141,7 @@ static char * setHorizantalTrafficLight(struct intersection_s intersection)
 				newColor = "G";
 				t = 0;
 			}
+			break;
 
 		case GREEN:
 			if((intersection.eastboundCars.carsWaitingAtIntersection + intersection.westboundCars.carsWaitingAtIntersection < intersection.northboundCars.carsWaitingAtIntersection + intersection.southboundCars.carsWaitingAtIntersection) || t > 10)
@@ -145,6 +149,7 @@ static char * setHorizantalTrafficLight(struct intersection_s intersection)
 				newColor = "Y";
 				t = 0;
 			}
+			break;
 
 		case YELLOW:
 			if(t > 1)
@@ -152,6 +157,7 @@ static char * setHorizantalTrafficLight(struct intersection_s intersection)
 				newColor = "R";
 				t = 0;
 			}
+			break;
 
 		default:
 			newColor = "R";
@@ -425,7 +431,7 @@ static void delay(int16_t ms)
 static int8_t checkForCrashes(void)
 {
 	int8_t isHorizantalCarInIntersection = (myIntersection.westboundCars.carsInIntersection | myIntersection.eastboundCars.carsInIntersection);
-	int8_t isVerticalCarInIntersection = (myIntersection.westboundCars.carsInIntersection | myIntersection.eastboundCars.carsInIntersection);
+	int8_t isVerticalCarInIntersection = (myIntersection.northboundCars.carsInIntersection | myIntersection.southboundCars.carsInIntersection);
 
 	if(isHorizantalCarInIntersection && isVerticalCarInIntersection){return 1;}
 	return 0;
