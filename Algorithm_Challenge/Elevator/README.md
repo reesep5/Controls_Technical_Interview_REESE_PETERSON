@@ -39,7 +39,7 @@ Candidate Action Items:
   above function, please do not edit the code that's already in the files, unless you are extremely certain that 
   there's a bug in the code.
 - Briefly describe your implementation (1-3 sentences).
-  - ADD YOUR ANSWER HERE
+  - I decided to go for a greedy method where, if the elevator was empty, it would find the nearest occupied floor and move there to pick up the occupants. If there were passengers, it would find the closest drop-off point of the current passengers. Since the building height, number of occupants, and the movement of the elevator is limited, the simple solution works well to get all of the occupants to their floors within the 60 second limit. 
 
 Don't forget; we are interested in both your solution and your thought process.
 
