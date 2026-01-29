@@ -23,9 +23,9 @@
 //****************************************************************************
 typedef enum
 {
-	RED = 0,
-	GREEN,
-	YELLOW
+	RED = 'R',
+	GREEN = 'G',
+	YELLOW = 'Y'
 } traffic_light_colors_t;
 
 //****************************************************************************
@@ -44,8 +44,8 @@ struct lane_of_cars_s
 
 struct intersection_s
 {
-	char * horizantalTrafficColor;
-	char * verticalTrafficColor;
+	traffic_light_colors_t horizontalTrafficColor;
+	traffic_light_colors_t verticalTrafficColor;
 
 	struct lane_of_cars_s eastboundCars;
 	struct lane_of_cars_s westboundCars;
@@ -53,9 +53,5 @@ struct intersection_s
 	struct lane_of_cars_s southboundCars;
 };
 
-//****************************************************************************
-// Public Function Prototype(s):
-//***************************************************************************
-void main(void); //Main function to run the traffic simulation
 
 #endif //INC_TRAFFIC_LIGHT_PROBLEM_H
