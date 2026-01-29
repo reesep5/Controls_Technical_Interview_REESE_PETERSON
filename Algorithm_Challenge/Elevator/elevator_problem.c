@@ -40,13 +40,103 @@ static void delay(int16_t ms);
 // Functions You (the Interviewee) Should Edit:
 //****************************************************************************
 
-//Returns the floor the elevator should STOP at next
-//To stop at a floor means to open the doors and let passengers on and off. It 
-//is possible to pass through a floor without stopping there.
-//Note: The output should be a number between 0 and (BUILDING_HEIGHT-1), inclusive
+/**
+ * Find the nearest drop-off location for the passengers on the elevator
+ * 
+ * @param elevator the elevator struct
+ * @return the closest floor to drop a passenger off at. If no passengers, returns -1
+ */
+int8_t findNearestDropoff(struct elevator_s elevator)
+{
+	int8_t closestFloor = -1;
+	int8_t minDistance = 5;
+	for(int8_t i = 0; i < ELEVATOR_MAX_CAPACITY; i++)
+	{
+		// If the passenger exists, then see if it's desired floor is the closest
+		if (elevator.passengers[i] != -1)
+		{
+			int8_t distance = abs(elevator.currentFloor - elevator.passengers[i]);
+			if (distance < minDistance)
+			{
+				closestFloor = elevator.passengers[i];
+				minDistance = distance;
+			}
+		}
+	}
+	return closestFloor;
+}
+
+/**
+ * Check if the floor is empty
+ * 
+ * @param floor The floor struct to check
+ * @return true if the floor is empty, false otherwise
+ */
+int8_t isFloorEmpty(const struct floor_s floor)
+{
+	int8_t isEmpty = 1;
+	for(int8_t i = 0; i < 2; i++)
+	{
+		isEmpty &= (floor.departures[i] < 0); // Check if each spot is empty on the floor
+	}
+	return isEmpty;
+}
+
+/**
+ * Find the nearest occupied floor to get passengers from
+ * 
+ * @param building The building struct
+ * @param currentFloorNum Floor number to measure the distance from
+ * @return The nearest occupied floor
+ */
+int8_t findNearestOccupiedFloor(struct building_s building, int8_t currentFloorNum)
+{
+	int8_t closestFloor = -1;
+	int8_t up = currentFloorNum+1;
+	int8_t down = currentFloorNum-1;
+
+	// If the current floor isn't empty then just return it
+	if (!isFloorEmpty(building.floors[currentFloorNum]))
+		return currentFloorNum;
+	else
+	{
+		// While the closest floor isn't found, continue the search
+		while (closestFloor == -1)
+		{
+			// Check if either the floors above or below has an occupied floor. Return the floor as soon as it's found
+			if (up < BUILDING_HEIGHT && !isFloorEmpty(building.floors[up]))
+			{
+				return up;
+			}
+			if (down >= 0 && !isFloorEmpty(building.floors[down]))
+			{
+				return down;
+			}
+			// If nothing, continue the search above and below until a floor is found
+			up++;
+			down--;
+		}
+	}
+}
+
+/**
+ * Set the next floor for the elevator to stop at, using a greedy method of finding either the nearest drop-off, or if not available, the nearest pick-up
+ * 
+ * @param building the building struct
+ * @return the next floor for the elevator to stop at
+ */
 static int8_t setNextElevatorStop(struct building_s building)
 {
-	return 0;
+	int8_t nextFloor = -1;
+
+	// Check for the nearest drop-off location
+	nextFloor = findNearestDropoff(building.elevator);
+	
+	// If the elevator is empty, then find the nearest occupied floor
+	if(nextFloor == -1)
+		nextFloor = findNearestOccupiedFloor(building, building.elevator.currentFloor);
+	
+	return nextFloor;
 }
 
 
@@ -155,7 +245,7 @@ static void initBuilding(void)
 	{
 		for(int8_t j = 0; j < 2; j++)
 		{
-			int destination = rand() % BUILDING_HEIGHT;
+			int8_t destination = rand() % BUILDING_HEIGHT;
 			while(destination == f)
 			{
 				destination = rand() % BUILDING_HEIGHT;
