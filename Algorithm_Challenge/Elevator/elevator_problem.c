@@ -41,22 +41,6 @@ static void delay(int16_t ms);
 //****************************************************************************
 
 /**
- * Check if the floor is empty
- * 
- * @param floor The floor struct to check
- * @return true if the floor is empty, false otherwise
- */
-int8_t isFloorEmpty(const struct floor_s floor)
-{
-	int8_t isEmpty = 1;
-	for(int i = 0; i < 2; i++)
-	{
-		isEmpty &= (floor.departures[i] < 0); // Check if each spot is empty on the floor
-	}
-	return isEmpty;
-}
-
-/**
  * Find the nearest drop-off location for the passengers on the elevator
  * 
  * @param elevator the elevator struct
@@ -80,6 +64,22 @@ int8_t findNearestDropoff(struct elevator_s elevator)
 		}
 	}
 	return closestFloor;
+}
+
+/**
+ * Check if the floor is empty
+ * 
+ * @param floor The floor struct to check
+ * @return true if the floor is empty, false otherwise
+ */
+int8_t isFloorEmpty(const struct floor_s floor)
+{
+	int8_t isEmpty = 1;
+	for(int i = 0; i < 2; i++)
+	{
+		isEmpty &= (floor.departures[i] < 0); // Check if each spot is empty on the floor
+	}
+	return isEmpty;
 }
 
 /**
