@@ -39,7 +39,7 @@ struct lane_of_cars_s
 	int8_t carsThatHaveLeft;
 	
 	int8_t popularity;
-	int8_t timeWaiting;
+	int16_t timeWaiting;
 };
 
 struct intersection_s
@@ -51,6 +51,9 @@ struct intersection_s
 	struct lane_of_cars_s westboundCars;
 	struct lane_of_cars_s northboundCars;
 	struct lane_of_cars_s southboundCars;
+
+	int8_t timeSinceGreen;
+	int8_t timeSinceYellow;
 };
 
 

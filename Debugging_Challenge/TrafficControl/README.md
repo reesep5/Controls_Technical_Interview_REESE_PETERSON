@@ -1,6 +1,6 @@
 # Traffic Light Problem (1 hour)
 
-There's a busy traffic intersection outside your building. The roads at the intersection are horizantal street and vertical street. 
+There's a busy traffic intersection outside your building. The roads at the intersection are horizontal street and vertical street. 
 You are an engineer with the department of transportation and you're trying to come up with a new traffic light pattern that 
 prevents cars from crashing in the intersection but also minimizes traffic jams. You ask a junior engineer to come up with a new 
 traffic pattern and simulate the traffic flow at the intersection for two minutes or until 40 cars pass through. They work on it 
@@ -21,7 +21,7 @@ A few things to note about where the junior engineer is 98% certain there are NO
 A few other things to note about the simulation:
 - Cars waiting to go into the intersection can only move into the intersection if the light is green.
 - Cars already in the intersection can move out of the intersection even when the light is red or yellow.
-- A crash should occur if a car on horizantal street and a car on vertical street are in the intersection at the same time.
+- A crash should occur if a car on horizontal street and a car on vertical street are in the intersection at the same time.
 - Cars IN the intersection are denoted with an 'X'. Cars on either side of the intersection are denoted with a '+'. 
   This will make more sense once you try running the program.
 - Only one car from each lane can be IN the intersection at once. For example, if two cars are waiting in the eastbound 

@@ -22,7 +22,7 @@
 //****************************************************************************
 // Variable(s)
 //****************************************************************************
-struct intersection_s myIntersection;
+struct intersection_s myIntersection = {0};
 
 //****************************************************************************
 // Private Function Prototype(s):
@@ -66,8 +66,7 @@ int main(void)
 		advanceLane(myIntersection.verticalTrafficColor, &myIntersection.southboundCars);
 
 		//Draw the intersection
-		// system("clear");
-		printf("\n");
+		system("clear");
 		drawIntersection(myIntersection);
 		fflush(stdout);
 		delay(1000);
@@ -85,16 +84,15 @@ int main(void)
 		int8_t totalCarsThatHaveLeft = myIntersection.northboundCars.carsThatHaveLeft + myIntersection.southboundCars.carsThatHaveLeft + myIntersection.eastboundCars.carsThatHaveLeft + myIntersection.westboundCars.carsThatHaveLeft;
 		if(totalCarsThatHaveLeft >= 40)
 		{
-			int16_t totalWaitTime = myIntersection.northboundCars.timeWaiting + myIntersection.southboundCars.timeWaiting + myIntersection.westboundCars.timeWaiting + myIntersection.eastboundCars.timeWaiting;
+			int totalWaitTime = myIntersection.northboundCars.timeWaiting + myIntersection.southboundCars.timeWaiting + myIntersection.westboundCars.timeWaiting + myIntersection.eastboundCars.timeWaiting;
 			printf("SUCCESS: You got all the cars through in %i seconds! The total wait time was: %i seconds!\n", i, totalWaitTime);
-			printf("%i %i %i %i\n", myIntersection.northboundCars.carsThatHaveLeft, myIntersection.southboundCars.carsThatHaveLeft, myIntersection.eastboundCars.carsThatHaveLeft, myIntersection.westboundCars.carsThatHaveLeft);
 			return 0;
 		}
 	}
 
 	//If the animation time's out, let them know their score.
 	int8_t totalCarsThatMadeIt = myIntersection.northboundCars.carsThatHaveLeft + myIntersection.southboundCars.carsThatHaveLeft + myIntersection.westboundCars.carsThatHaveLeft + myIntersection.eastboundCars.carsThatHaveLeft;
-	int16_t totalWaitTime = myIntersection.northboundCars.timeWaiting + myIntersection.southboundCars.timeWaiting + myIntersection.westboundCars.timeWaiting + myIntersection.eastboundCars.timeWaiting;
+	int totalWaitTime = myIntersection.northboundCars.timeWaiting + myIntersection.southboundCars.timeWaiting + myIntersection.westboundCars.timeWaiting + myIntersection.eastboundCars.timeWaiting;
 	printf("FAIL: Traffic Jam! You ran out of time. You got %i/40 cars through in 120 seconds. The total wait time was: %i seconds.\n", totalCarsThatMadeIt, totalWaitTime);
 	return 0;
 }
@@ -114,32 +112,45 @@ static void initIntersection(void)
 	myIntersection.southboundCars.popularity = 4;
 }
 
-static traffic_light_colors_t setHorizontalTrafficLight(struct intersection_s intersection)
+/**
+ * Set the traffic light for the specific through path
+ * 
+ * @param throughPathLightColor current color of the through path light
+ * @param crossPathLightColor current color of the cross path light
+ * @param throughPathCarsWaiting number of cars waiting on the through path
+ * @param crossPathCarsWaiting number of cars waiting on the cross path
+ * 
+ * @return New color of the through path light
+ */
+static traffic_light_colors_t setTrafficLight(traffic_light_colors_t throughPathLightColor, traffic_light_colors_t crossPathLightColor, int8_t throughPathCarsWaiting, int8_t crossPathCarsWaiting)
 {
 	static int8_t t = 0;
-	traffic_light_colors_t currentColor = intersection.horizontalTrafficColor;
-	traffic_light_colors_t newColor = currentColor;
+	traffic_light_colors_t newColor = throughPathLightColor;
 
-	t++;
-	switch(currentColor)
+	switch(throughPathLightColor)
 	{
+		// If both lights are red and there are more cars waiting on the through path, turn the through path light green
 		case RED:
-			if((intersection.eastboundCars.carsWaitingAtIntersection + intersection.westboundCars.carsWaitingAtIntersection >= intersection.northboundCars.carsWaitingAtIntersection + intersection.southboundCars.carsWaitingAtIntersection) && intersection.verticalTrafficColor == RED)
+			if((throughPathCarsWaiting >= crossPathCarsWaiting) && crossPathLightColor == RED)
 			{
 				newColor = GREEN;
 				t = 0;
 			}
 			break;
-
+		
+		// If the light is green and either the number of cars waiting on the cross path exceeds the number of cars or the light has been green for more than 10 s,
+		// switch the light to yellow
 		case GREEN:
-			if((intersection.eastboundCars.carsWaitingAtIntersection + intersection.westboundCars.carsWaitingAtIntersection < intersection.northboundCars.carsWaitingAtIntersection + intersection.southboundCars.carsWaitingAtIntersection) || t > 10)
+			t++;
+			if((throughPathCarsWaiting < crossPathCarsWaiting) || t > 10)
 			{
 				newColor = YELLOW;
 				t = 0;
 			}
 			break;
-
+		// If the light is yellow for more than a second to let any last car through, set the light to red
 		case YELLOW:
+			t++;
 			if(t > 1)
 			{
 				newColor = RED;
@@ -155,48 +166,38 @@ static traffic_light_colors_t setHorizontalTrafficLight(struct intersection_s in
 	return newColor;
 }
 
-static traffic_light_colors_t setVerticalTrafficLight(struct intersection_s intersection)
+/**
+ * Set the horizontal traffic light color
+ * 
+ * @param intersection the intersection struct
+ * @return The new color of the horizontal traffic light
+ */
+static traffic_light_colors_t setHorizontalTrafficLight(struct intersection_s intersection)
 {
-	static int8_t t = 0;
-	traffic_light_colors_t currentColor = intersection.verticalTrafficColor;
-	traffic_light_colors_t newColor = currentColor;
-
-	t++;
-	switch(currentColor)
-	{
-		case RED:
-			if((intersection.eastboundCars.carsWaitingAtIntersection + intersection.westboundCars.carsWaitingAtIntersection < intersection.northboundCars.carsWaitingAtIntersection + intersection.southboundCars.carsWaitingAtIntersection) && (intersection.horizontalTrafficColor == RED))
-			{
-				newColor = GREEN;
-				t = 0;
-			}
-			break;
-
-		case GREEN:
-			if((intersection.eastboundCars.carsWaitingAtIntersection + intersection.westboundCars.carsWaitingAtIntersection >= intersection.northboundCars.carsWaitingAtIntersection + intersection.southboundCars.carsWaitingAtIntersection) || t > 10)
-			{
-				newColor = YELLOW;
-				t = 0;
-			}
-			break;
-
-		case YELLOW:
-			if(t > 1)
-			{
-				newColor = RED;
-				t = 0;
-			}
-			break;
-
-		default:
-			newColor = RED;
-			t = 0;
-			break;	
-	}
-
-	return newColor;
+	int8_t horizontalCarsWaiting = intersection.eastboundCars.carsWaitingAtIntersection + intersection.westboundCars.carsWaitingAtIntersection;
+	int8_t verticalCarsWaiting = intersection.northboundCars.carsWaitingAtIntersection + intersection.southboundCars.carsWaitingAtIntersection;
+	return setTrafficLight(intersection.horizontalTrafficColor, intersection.verticalTrafficColor, horizontalCarsWaiting, verticalCarsWaiting);
 }
 
+/**
+ * Set the vertical traffic light color
+ * 
+ * @param intersection the intersection struct
+ * @return The new color of the vertical traffic light
+ */
+static traffic_light_colors_t setVerticalTrafficLight(struct intersection_s intersection)
+{
+	int8_t horizontalCarsWaiting = intersection.eastboundCars.carsWaitingAtIntersection + intersection.westboundCars.carsWaitingAtIntersection;
+	int8_t verticalCarsWaiting = intersection.northboundCars.carsWaitingAtIntersection + intersection.southboundCars.carsWaitingAtIntersection;
+	return setTrafficLight(intersection.verticalTrafficColor, intersection.horizontalTrafficColor, verticalCarsWaiting, horizontalCarsWaiting);
+}
+
+/**
+ * Move the cars in the lane based on the traffic light
+ * 
+ * @param trafficColor color of the traffic light for the lane
+ * @param lane specific lane to move the cars
+ */
 static void advanceLane(traffic_light_colors_t trafficColor, struct lane_of_cars_s * lane)
 {
 	//Move any cars on the leaving side of the intersection into oblivion
@@ -401,7 +402,9 @@ static void delay(int16_t ms)
     while(clock() < startTime + ms);
 }
 
-
+/**
+ * Check if there is a crash
+ */
 static int8_t checkForCrashes(void)
 {
 	// Check if there are any cars in the intersection travelling vertically and horizontally in the intersection
