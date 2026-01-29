@@ -48,14 +48,14 @@ static void delay(int16_t ms);
  */
 int8_t findNearestDropoff(struct elevator_s elevator)
 {
-	int closestFloor = -1;
-	int minDistance = 5;
-	for(int i = 0; i < ELEVATOR_MAX_CAPACITY; i++)
+	int8_t closestFloor = -1;
+	int8_t minDistance = 5;
+	for(int8_t i = 0; i < ELEVATOR_MAX_CAPACITY; i++)
 	{
 		// If the passenger exists, then see if it's desired floor is the closest
 		if (elevator.passengers[i] != -1)
 		{
-			int distance = abs(elevator.currentFloor - elevator.passengers[i]);
+			int8_t distance = abs(elevator.currentFloor - elevator.passengers[i]);
 			if (distance < minDistance)
 			{
 				closestFloor = elevator.passengers[i];
@@ -75,7 +75,7 @@ int8_t findNearestDropoff(struct elevator_s elevator)
 int8_t isFloorEmpty(const struct floor_s floor)
 {
 	int8_t isEmpty = 1;
-	for(int i = 0; i < 2; i++)
+	for(int8_t i = 0; i < 2; i++)
 	{
 		isEmpty &= (floor.departures[i] < 0); // Check if each spot is empty on the floor
 	}
@@ -84,8 +84,10 @@ int8_t isFloorEmpty(const struct floor_s floor)
 
 /**
  * Find the nearest occupied floor to get passengers from
+ * 
  * @param building The building struct
  * @param currentFloorNum Floor number to measure the distance from
+ * @return The nearest occupied floor
  */
 int8_t findNearestOccupiedFloor(struct building_s building, int8_t currentFloorNum)
 {
@@ -243,7 +245,7 @@ static void initBuilding(void)
 	{
 		for(int8_t j = 0; j < 2; j++)
 		{
-			int destination = rand() % BUILDING_HEIGHT;
+			int8_t destination = rand() % BUILDING_HEIGHT;
 			while(destination == f)
 			{
 				destination = rand() % BUILDING_HEIGHT;

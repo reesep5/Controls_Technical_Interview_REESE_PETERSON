@@ -75,8 +75,6 @@ int main(void)
 		if(checkForCrashes() == 1)
 		{
 			printf("FAIL: Car crash!\n");
-			drawIntersection(myIntersection);
-			fflush(stdout);
 			return 0;
 		}
 
@@ -129,7 +127,7 @@ static traffic_light_colors_t setTrafficLight(traffic_light_colors_t throughPath
 
 	switch(throughPathLightColor)
 	{
-		// If both lights are red and there are more cars waiting on the through path, turn the through path light green
+		// If there are more cars waiting on the through path than the cross path and the cross path light is red, turn the through path light green
 		case RED:
 			if((throughPathCarsWaiting >= crossPathCarsWaiting) && crossPathLightColor == RED)
 			{
@@ -138,8 +136,8 @@ static traffic_light_colors_t setTrafficLight(traffic_light_colors_t throughPath
 			}
 			break;
 		
-		// If the light is green and either the number of cars waiting on the cross path exceeds the number of cars or the light has been green for more than 10 s,
-		// switch the light to yellow
+		// If the light is green and either the number of cars waiting on the cross path exceeds the number of cars on the through path
+		// or the light has been green for more than 10 s, switch the light to yellow
 		case GREEN:
 			t++;
 			if((throughPathCarsWaiting < crossPathCarsWaiting) || t > 10)

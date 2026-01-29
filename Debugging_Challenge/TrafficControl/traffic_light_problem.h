@@ -51,9 +51,6 @@ struct intersection_s
 	struct lane_of_cars_s westboundCars;
 	struct lane_of_cars_s northboundCars;
 	struct lane_of_cars_s southboundCars;
-
-	int8_t timeSinceGreen;
-	int8_t timeSinceYellow;
 };
 
 
