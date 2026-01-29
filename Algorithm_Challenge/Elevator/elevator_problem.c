@@ -245,7 +245,7 @@ static void initBuilding(void)
 	{
 		for(int8_t j = 0; j < 2; j++)
 		{
-			int8_t destination = rand() % BUILDING_HEIGHT;
+			int destination = rand() % BUILDING_HEIGHT;
 			while(destination == f)
 			{
 				destination = rand() % BUILDING_HEIGHT;
